@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: ankane/pgvector:latest
+    environment:
+      POSTGRES_USER: svoevino
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: scanner
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://svoevino:secret@db:5432/scanner
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NUXT_PUBLIC_API_BASE=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
